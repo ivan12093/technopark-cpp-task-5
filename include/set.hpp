@@ -235,14 +235,14 @@ typename Set<T>::Node *Set<T>::copy_nodes(Set::Node *node) {
 template<class T>
 Set<T>::Set(std::initializer_list<T> initializerList) {
     for (auto it = initializerList.begin(); it != initializerList.end(); ++it)
-        insert(root, it, nullptr);
+        insert(*it);
 }
 
 template<class T>
 template<class InputIt>
 Set<T>::Set(InputIt first, InputIt last) {
     for (auto it = first; it != last; ++it)
-        insert(root, it, nullptr);
+        insert(*it);
 }
 
 template<class T>

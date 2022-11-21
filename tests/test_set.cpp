@@ -2,6 +2,10 @@
 
 #include "set.hpp"
 
+#define SET_EXPECT_EQ(set1, set2) EXPECT_EQ(set1.size(), set2.size());            \
+for (auto it1 = set1.begin(), it2 = set2.begin(); it1 != set1.end(); ++it1, ++it2) \
+EXPECT_EQ(*it1, *it2);
+
 TEST(SET, Set_default) {
     Set<int> set;
     set.insert(1);
@@ -24,4 +28,29 @@ TEST(SET, Set_default) {
 
     EXPECT_EQ(set.size(), 0);
     EXPECT_EQ(set.empty(), true);
+}
+
+TEST(SET, Copy_and_assign) {
+    Set<int> set1;
+    set1.insert(1);
+    set1.insert(4);
+    set1.insert(5);
+    set1.insert(3);
+    set1.insert(2);
+
+    Set<int> set2(set1);
+    SET_EXPECT_EQ(set1, set2);
+    auto set3 = set2;
+    SET_EXPECT_EQ(set3, set2);
+}
+
+TEST(SET, Bidirectional_iterators) {
+    Set<int> set = {5, 1, 3, 4, 2, 8, 6, 5, 7};
+    int i = 1;
+    for (auto it = set.begin(); i < 9; ++i, ++it)
+        EXPECT_EQ(*it, i);
+    i = 8;
+    auto end = set.end();
+    for (auto it = --end; i > 0; --i, --it)
+        EXPECT_EQ(*it, i);
 }
