@@ -20,9 +20,9 @@ class Set {
     Node* balance(Node* node);
     Node* insert(Node* _root, T key, Node *parent);
     Node* find_min(Node* node);
-    Node* find(Node* node, T key);
+    Node* find(Node* node, T key) const;
     Node* find_parent(Node* node, T key);
-    Node* lower_bound(Node* node, T key);
+    Node* lower_bound(Node* node, T key) const;
     Node* remove_min(Node* node);
     Node* remove(Node* node, T key);
     Node* copy_nodes(Node* node);
@@ -147,7 +147,7 @@ typename Set<T>::Node *Set<T>::find_min(Set::Node *node) {
 }
 
 template<class T>
-typename Set<T>::Node *Set<T>::find(Set::Node *node, T key) {
+typename Set<T>::Node *Set<T>::find(Set::Node *node, T key) const {
     if (!node)
         return nullptr;
     if (!(key < node->key) && !(node->key < key))
@@ -173,7 +173,7 @@ typename Set<T>::Node *Set<T>::find_parent(Set::Node *node, T key) {
 }
 
 template<class T>
-typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) {
+typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) const {
     if (!node)
         return nullptr;
     if (!(key < node->key) && !(node->key < key))
