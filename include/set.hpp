@@ -8,7 +8,8 @@ class Set {
         int height;
         Node* left;
         Node* right;
-        explicit Node(T _key) : key(_key), height(1), left(nullptr), right(nullptr) {};
+        typename std::list<T>::const_iterator list_it;
+        explicit Node(T _key) : key(_key), height(1), left(nullptr), right(nullptr), list_it(nullptr) {};
         ~Node() { delete left; delete right; };
     };
     int balance_factor(Node* node);
@@ -17,8 +18,11 @@ class Set {
     Node* rotate_right(Node* node);
     Node* rotate_left(Node* node);
     Node* balance(Node* node);
-    Node* insert(Node* _root, T key);
+    Node* insert(Node* _root, T key, Node *parent);
     Node* find_min(Node* node);
+    Node* find(Node* node, T key);
+    Node* find_parent(Node* node, T key);
+    Node* lower_bound(Node* node, T key);
     Node* remove_min(Node* node);
     Node* remove(Node* node, T key);
     Node* copy_nodes(Node* node);
@@ -105,17 +109,32 @@ typename Set<T>::Node *Set<T>::balance(Set::Node *node) {
 }
 
 template<class T>
-typename Set<T>::Node *Set<T>::insert(Set::Node *_root, T key) {
+typename Set<T>::Node *Set<T>::insert(Set::Node *_root, T key, Node *parent) {
     if (!_root) {
         ++_size;
-        return new Node(key);
+        auto new_node = new Node(key);
+        if (!parent) {
+            linkedList.push_back(key);
+            new_node->list_it = linkedList.begin();
+            return new_node;
+        }
+        if (key < parent->key) {
+            linkedList.insert(parent->list_it, key);
+            auto it = parent->list_it;
+            new_node->list_it = --it;
+            return new_node;
+        }
+        auto it = parent->list_it;
+        linkedList.insert(++it, key);
+        new_node->list_it = --it;
+        return new_node;
     }
     if (!(key < _root->key) && !(_root->key < key))
         return _root;
     if (key < _root->key)
-        _root->left = insert(_root->left, key);
+        _root->left = insert(_root->left, key, _root);
     else
-        _root->right = insert(_root->right, key);
+        _root->right = insert(_root->right, key, _root);
     return balance(_root);
 }
 
@@ -125,6 +144,49 @@ typename Set<T>::Node *Set<T>::find_min(Set::Node *node) {
     while (min->left)
         min = min->left;
     return min;
+}
+
+template<class T>
+typename Set<T>::Node *Set<T>::find(Set::Node *node, T key) {
+    if (!node)
+        return nullptr;
+    if (!(key < node->key) && !(node->key < key))
+        return node;
+    if (key < node->key)
+        return find(node->left, key);
+    return find(node->right, key);
+}
+
+template<class T>
+typename Set<T>::Node *Set<T>::find_parent(Set::Node *node, T key) {
+    if (!node)
+        return nullptr;
+    else if (node->left && !(key < node->left->key) && !(node->left->key < key))
+        return node;
+    else if (node->right && !(key < node->right->key) && !(node->right->key < key))
+        return node;
+    else if (key < node->key)
+        return find_parent(node->left, key);
+    else if (key > node->key)
+        return find_parent(node->right, key);
+    return nullptr;
+}
+
+template<class T>
+typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) {
+    if (!node)
+        return nullptr;
+    if (!(key < node->key) && !(node->key < key))
+        return node;
+    if (key < node->key)
+        return lower_bound(node->left, key);
+
+    Node* candidate = lower_bound(node->right, key);
+    if (!candidate)
+        return node;
+    if (key - candidate->key < key - node->key)
+        return candidate;
+    return node;
 }
 
 template<class T>
@@ -173,14 +235,14 @@ typename Set<T>::Node *Set<T>::copy_nodes(Set::Node *node) {
 template<class T>
 Set<T>::Set(std::initializer_list<T> initializerList) {
     for (auto it = initializerList.begin(); it != initializerList.end(); ++it)
-        insert(root, it);
+        insert(root, it, nullptr);
 }
 
 template<class T>
 template<class InputIt>
 Set<T>::Set(InputIt first, InputIt last) {
     for (auto it = first; it != last; ++it)
-        insert(root, it);
+        insert(root, it, nullptr);
 }
 
 template<class T>
@@ -195,12 +257,20 @@ typename std::list<T>::const_iterator Set<T>::end() const {
 
 template<class T>
 void Set<T>::erase(const T &val) {
+    Node* target = find(root, val);
+    if (!target)
+        return;
+
+    linkedList.erase(target->list_it);
     root = remove(root, val);
 }
 
 template<class T>
 void Set<T>::insert(const T &val) {
-    root = insert(root, val);
+    if (find(root, val) != nullptr)
+        return;
+    root = insert(root, val, nullptr);
+    std::cout << "\n";
 }
 
 template<class T>
@@ -218,3 +288,33 @@ Set<T>::~Set() {
     delete root;
 }
 
+template<class T>
+typename std::list<T>::const_iterator Set<T>::find(const T &val) const {
+    Node* target = find(root, val);
+    if (target == nullptr)
+        return linkedList.end();
+    return target->list_it;
+}
+
+template<class T>
+typename std::list<T>::const_iterator Set<T>::lower_bound(const T &val) const {
+    Node* lower = lower_bound(root, val);
+    if (!lower)
+        return linkedList.end();
+    return lower->list_it;
+}
+
+template<class T>
+Set<T>::Set(const Set &rhs) {
+    for (auto it = rhs.begin(); it != rhs.end(); ++it)
+        insert(*it);
+}
+
+template<class T>
+Set<T> &Set<T>::operator=(const Set &rhs) {
+    if (this == &rhs)
+        return *this;
+    for (auto it = rhs.begin(); it != rhs.end(); ++it)
+        insert(*it);
+    return *this;
+}
