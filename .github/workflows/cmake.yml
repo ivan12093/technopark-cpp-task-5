@@ -23,7 +23,7 @@ jobs:
       run: cmake -H. -Bbuild  -DBUILD_COVERAGE=ON && cmake --build build
 
     - name: Run main
-      run: cd build/ && ./task_2 && cd ../
+      run: cd build/ && ./task_5 && cd ../
 
     - name: Run tests
       run: cd build/tests && ./tests && cd ../../

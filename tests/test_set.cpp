@@ -12,6 +12,9 @@ TEST(SET, Set_default) {
 
     EXPECT_EQ(set.size(), 5);
     EXPECT_EQ(set.empty(), false);
+    int i = 1;
+    for (auto it = set.begin(); i < 6; ++i, ++it)
+        EXPECT_EQ(*it, i);
 
     set.erase(1);
     set.erase(4);
