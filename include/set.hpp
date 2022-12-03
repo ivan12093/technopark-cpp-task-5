@@ -181,7 +181,7 @@ typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) const {
     if (!node)
         return nullptr;
     if (!(key < node->key) && !(node->key < key))
-        return lower_bound(node->right, key);
+        return node;
     if (!(key < node->key))
         return lower_bound(node->right, key);
 

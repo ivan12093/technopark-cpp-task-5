@@ -13,6 +13,7 @@ TEST(SET, Set_default) {
     set.insert(5);
     set.insert(3);
     set.insert(2);
+    set.insert(2);
 
     EXPECT_EQ(set.size(), 5);
     EXPECT_EQ(set.empty(), false);
@@ -20,6 +21,7 @@ TEST(SET, Set_default) {
     for (auto it = set.begin(); i < 6; ++i, ++it)
         EXPECT_EQ(*it, i);
 
+    set.erase(0);
     set.erase(1);
     set.erase(4);
     set.erase(5);
@@ -40,7 +42,9 @@ TEST(SET, Copy_and_assign) {
 
     Set<int> set2(set1);
     SET_EXPECT_EQ(set1, set2);
-    auto set3 = set2;
+    auto set3 = set1;
+    SET_EXPECT_EQ(set3, set1);
+    set3 = set2;
     SET_EXPECT_EQ(set3, set2);
     Set<int> set4(set3.begin(), set3.end());
     SET_EXPECT_EQ(set4, set3);
@@ -65,6 +69,8 @@ TEST(SET, find_elem_by_value) {
     EXPECT_EQ(*it, 7);
     ++it;
     EXPECT_EQ(*it, 8);
+    it = set.find(13);
+    EXPECT_EQ(it, set.end());
 }
 
 TEST(SET, find_lower_bound) {
@@ -72,5 +78,9 @@ TEST(SET, find_lower_bound) {
     auto it = set.lower_bound(10);
     EXPECT_EQ(*it, 13);
     it = set.lower_bound(0);
+    EXPECT_EQ(*it, 1);
+    it = set.lower_bound(15);
+    EXPECT_EQ(it, set.end());
+    it = set.lower_bound(1);
     EXPECT_EQ(*it, 1);
 }

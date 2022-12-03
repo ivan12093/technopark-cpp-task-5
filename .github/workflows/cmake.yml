@@ -16,7 +16,7 @@ jobs:
       run: git submodule update --init
 
     - name: Build default
-      run: cmake -H. -Bbuild -DBUILD_COVERAGE=ON && cmake --build build
+      run: cmake -H. -Bbuild && cmake --build build
 
     - name: Run main
       run: cd build/ && ./task_5 && cd ../
