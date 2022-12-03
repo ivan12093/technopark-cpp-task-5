@@ -40,8 +40,11 @@ jobs:
     - name: Build
       run: cmake -H. -Bbuild  -DBUILD_COVERAGE=ON && cmake --build build
 
-    - name:
+    - name: Run tests
       run: cd build/tests && ./tests && cd ../../
+
+    - name: Run main
+      run: cd build/ && ./task_5 && cd ../
 
     - name: Build lcov report
       run: cmake --build build --target lcov
