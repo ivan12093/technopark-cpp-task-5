@@ -186,9 +186,7 @@ typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) const {
         return lower_bound(node->right, key);
 
     Node* candidate = lower_bound(node->left, key);
-    if (!candidate)
-        return node;
-    if (candidate->key < node->key)
+    if (candidate && candidate->key < node->key)
         return candidate;
     return node;
 }
@@ -201,6 +199,7 @@ typename Set<T>::Node *Set<T>::remove(Set::Node *node, T key) {
         --_size;
         Node* left = node->left;
         Node* right = node->right;
+        linkedList.erase(node->list_it);
         node->left = nullptr;
         node->right = nullptr;
         delete node;
@@ -261,18 +260,11 @@ typename std::list<T>::const_iterator Set<T>::end() const {
 
 template<class T>
 void Set<T>::erase(const T &val) {
-    Node* target = find(root, val);
-    if (!target)
-        return;
-
-    linkedList.erase(target->list_it);
     root = remove(root, val);
 }
 
 template<class T>
 void Set<T>::insert(const T &val) {
-    if (find(root, val) != nullptr)
-        return;
     root = insert(root, val, nullptr);
 }
 

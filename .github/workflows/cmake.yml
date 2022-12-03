@@ -47,7 +47,7 @@ jobs:
       run: cmake --build build --target lcov
 
     - name: Prepare artifact
-      run: gcovr -r . > report.txt
+      run: gcovr -r . | grep -v " 0% " > report.txt
 
     - name: Upload coverage report as artifact
       uses: actions/upload-artifact@v3

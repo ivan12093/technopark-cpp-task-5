@@ -14,19 +14,31 @@ TEST(SET, Set_default) {
     set.insert(3);
     set.insert(2);
     set.insert(2);
+    set.insert(2);
+    set.insert(6);
+    set.insert(7);
+    set.insert(8);
+    set.insert(9);
+    set.insert(10);
 
-    EXPECT_EQ(set.size(), 5);
+    EXPECT_EQ(set.size(), 10);
     EXPECT_EQ(set.empty(), false);
     int i = 1;
-    for (auto it = set.begin(); i < 6; ++i, ++it)
+    for (auto it = set.begin(); i < 11; ++i, ++it)
         EXPECT_EQ(*it, i);
 
+    set.erase(4);
     set.erase(0);
     set.erase(1);
-    set.erase(4);
     set.erase(5);
     set.erase(3);
     set.erase(2);
+    set.erase(6);
+    set.erase(7);
+    set.erase(8);
+    set.erase(9);
+    set.erase(10);
+    set.erase(137);
 
     EXPECT_EQ(set.size(), 0);
     EXPECT_EQ(set.empty(), true);
@@ -44,6 +56,8 @@ TEST(SET, Copy_and_assign) {
     SET_EXPECT_EQ(set1, set2);
     auto set3 = set1;
     SET_EXPECT_EQ(set3, set1);
+    auto set3p = &set3;
+    set3 = *set3p;
     set3 = set2;
     SET_EXPECT_EQ(set3, set2);
     Set<int> set4(set3.begin(), set3.end());
