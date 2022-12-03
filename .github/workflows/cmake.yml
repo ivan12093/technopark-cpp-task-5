@@ -7,9 +7,28 @@ on:
     branches: [ "main" ]
 
 jobs:
-  check:
+  tests:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
 
+    - name: Submodule update
+      run: git submodule update --init
+
+    - name: Build default
+      run: cmake -H. -Bbuild -DBUILD_COVERAGE=ON && cmake --build build
+
+    - name: Run main
+      run: cd build/ && ./task_5 && cd ../
+
+    - name: Run external tests
+      run: cd build/tests && ./tests_external && cd ../../
+
+    - name:
+      run: cd build/tests && ./tests && cd ../../
+
+  coverage:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -18,14 +37,10 @@ jobs:
 
     - name: Install lcov
       run: sudo apt -y install lcov gcovr
-
     - name: Build
       run: cmake -H. -Bbuild  -DBUILD_COVERAGE=ON && cmake --build build
 
-    - name: Run main
-      run: cd build/ && ./task_5 && cd ../
-
-    - name: Run tests
+    - name:
       run: cd build/tests && ./tests && cd ../../
 
     - name: Build lcov report

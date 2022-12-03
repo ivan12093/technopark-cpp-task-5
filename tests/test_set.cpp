@@ -70,7 +70,7 @@ TEST(SET, find_elem_by_value) {
 TEST(SET, find_lower_bound) {
     Set<int> set = {1, 2, -1, 4, 7, 13};
     auto it = set.lower_bound(10);
-    EXPECT_EQ(*it, 7);
+    EXPECT_EQ(*it, 13);
     it = set.lower_bound(0);
-    EXPECT_EQ(*it, -1);
+    EXPECT_EQ(*it, 1);
 }

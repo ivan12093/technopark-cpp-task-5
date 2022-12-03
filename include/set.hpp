@@ -5,20 +5,21 @@ class Set {
  private:
     struct Node {
         T key;
-        int height;
+        unsigned height;
         Node* left;
         Node* right;
         typename std::list<T>::const_iterator list_it;
         explicit Node(T _key) : key(_key), height(1), left(nullptr), right(nullptr), list_it(nullptr) {};
         ~Node() { delete left; delete right; };
     };
+    // разница высот между высотами правого и левого поддеревьев
     int balance_factor(Node* node);
     int get_height(Node* node);
     void fix_height(Node* node);
     Node* rotate_right(Node* node);
     Node* rotate_left(Node* node);
     Node* balance(Node* node);
-    Node* insert(Node* _root, T key, Node *parent);
+    Node* insert(Node* node, T key, Node *parent);
     Node* find_min(Node* node);
     Node* find(Node* node, T key) const;
     Node* find_parent(Node* node, T key);
@@ -51,8 +52,10 @@ class Set {
     [[nodiscard]] size_t size() const;
     [[nodiscard]] bool empty() const;
 
-    typename std::list<T>::const_iterator find(const T& val) const;
-    typename std::list<T>::const_iterator lower_bound(const T& val) const;
+    using iterator = typename std::list<T>::const_iterator;
+
+    iterator find(const T& val) const;
+    iterator lower_bound(const T& val) const;
 };
 
 template<class T>
@@ -109,8 +112,8 @@ typename Set<T>::Node *Set<T>::balance(Set::Node *node) {
 }
 
 template<class T>
-typename Set<T>::Node *Set<T>::insert(Set::Node *_root, T key, Node *parent) {
-    if (!_root) {
+typename Set<T>::Node *Set<T>::insert(Set::Node *node, T key, Node *parent) {
+    if (!node) {
         ++_size;
         auto new_node = new Node(key);
         if (!parent) {
@@ -129,13 +132,13 @@ typename Set<T>::Node *Set<T>::insert(Set::Node *_root, T key, Node *parent) {
         new_node->list_it = --it;
         return new_node;
     }
-    if (!(key < _root->key) && !(_root->key < key))
-        return _root;
-    if (key < _root->key)
-        _root->left = insert(_root->left, key, _root);
+    if (!(key < node->key) && !(node->key < key))
+        return node;
+    if (key < node->key)
+        node->left = insert(node->left, key, node);
     else
-        _root->right = insert(_root->right, key, _root);
-    return balance(_root);
+        node->right = insert(node->right, key, node);
+    return balance(node);
 }
 
 template<class T>
@@ -177,14 +180,14 @@ typename Set<T>::Node *Set<T>::lower_bound(Set::Node *node, T key) const {
     if (!node)
         return nullptr;
     if (!(key < node->key) && !(node->key < key))
-        return node;
-    if (key < node->key)
-        return lower_bound(node->left, key);
+        return lower_bound(node->right, key);
+    if (!(key < node->key))
+        return lower_bound(node->right, key);
 
-    Node* candidate = lower_bound(node->right, key);
+    Node* candidate = lower_bound(node->left, key);
     if (!candidate)
         return node;
-    if (key - candidate->key < key - node->key)
+    if (candidate->key < node->key)
         return candidate;
     return node;
 }
@@ -270,7 +273,6 @@ void Set<T>::insert(const T &val) {
     if (find(root, val) != nullptr)
         return;
     root = insert(root, val, nullptr);
-    std::cout << "\n";
 }
 
 template<class T>
@@ -314,6 +316,10 @@ template<class T>
 Set<T> &Set<T>::operator=(const Set &rhs) {
     if (this == &rhs)
         return *this;
+    _size = 0;
+    linkedList.clear();
+    delete root;
+    root = nullptr;
     for (auto it = rhs.begin(); it != rhs.end(); ++it)
         insert(*it);
     return *this;
