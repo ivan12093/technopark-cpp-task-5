@@ -1,0 +1,71 @@
+name: Checks
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Submodule update
+      run: git submodule update --init
+
+    - name: Build default
+      run: cmake -H. -Bbuild && cmake --build build
+
+    - name: Run main
+      run: cd build/ && ./task_5 && cd ../
+
+    - name: Run external tests
+      run: cd build/tests && ./tests_external && cd ../../
+
+    - name:
+      run: cd build/tests && ./tests && cd ../../
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Submodule update
+      run: git submodule update --init
+
+    - name: Install lcov
+      run: sudo apt -y install lcov gcovr
+    - name: Build
+      run: cmake -H. -Bbuild  -DBUILD_COVERAGE=ON && cmake --build build
+
+    - name: Run tests
+      run: cd build/tests && ./tests && cd ../../
+
+    - name: Run main
+      run: cd build/ && ./task_5 && cd ../
+
+    - name: Build lcov report
+      run: cmake --build build --target lcov
+
+    - name: Prepare artifact
+      run: gcovr -r . | grep -v " 0% " > report.txt
+
+    - name: Upload coverage report as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: report.txt
+
+    - name: Collect info for codecov
+      run: |
+        lcov --capture --directory . -o 1.info && lcov --remove 1.info '/usr/*' --output-file 1.info\
+        && lcov --list 1.info
+
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: 1.info
+        fail_ci_if_error: true
+        verbose: true
