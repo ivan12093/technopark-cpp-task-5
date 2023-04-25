@@ -11,6 +11,8 @@ namespace Blaze {
 template<class T>
 class Blaze::ISet {
  public:
+    virtual iterator begin() const noexcept = 0;
+
     virtual size_t size() const = 0;
     virtual bool empty() const = 0;
 

@@ -42,7 +42,7 @@ class Blaze::AVLTree : public Blaze::ISet<T> {
     explicit AVLTree(const Less& _less);
     AVLTree(std::initializer_list<T> initializerList);
 
-    template<class InputIt>
+    template<class InputIt> requires std::input_iterator<InputIt>
     AVLTree(InputIt first, InputIt last);
 
     AVLTree(const AVLTree& rhs);
@@ -359,7 +359,7 @@ Blaze::AVLTree<T, Less>::AVLTree(std::initializer_list<T> initializerList) {
 }
 
 template<class T, class Less>
-template<class InputIt>
+template<class InputIt> requires std::input_iterator<InputIt>
 Blaze::AVLTree<T, Less>::AVLTree(InputIt first, InputIt last) {
     for (auto it = first; it != last; ++it)
         insert(*it);
