@@ -1,351 +1,47 @@
-#include <list>
-#include <cstddef>
-#include <functional>
-#include <utility>
-#include <concepts>
+#ifndef TASK_5_SET_HPP
+#define TASK_5_SET_HPP
 
-template<class T, class Compare>
-concept comparable_with = requires(const T& t, Compare cmp) {
-    { cmp(t, t) } -> std::convertible_to<bool>;
+#include <memory>
+
+namespace Blaze {
+    template<class T>
+    class ISet;
 };
 
-template<class T, class Less = std::less<T>>
-requires std::copyable<T> && std::semiregular<Less> && comparable_with<T, Less>
-class Set {
- private:
-    struct Node {
-        T key;
-        unsigned height;
-        Node* left;
-        Node* right;
-        typename std::list<T>::const_iterator list_it;
-        explicit Node(const T& _key) : key(_key), height(1), left(nullptr), right(nullptr), list_it(nullptr) {};
-        ~Node() { delete left; delete right; };
-    };
-    // разница высот между высотами правого и левого поддеревьев
-    int balance_factor(Node* node);
-    int get_height(Node* node);
-    void fix_height(Node* node);
-    Node* rotate_right(Node* node);
-    Node* rotate_left(Node* node);
-    Node* balance(Node* node);
-    Node* insert(Node* node, const T& key, Node *parent);
-    Node* find_min(Node* node);
-    Node* find(Node* node, const T& key) const;
-    Node* find_parent(Node* node, const T& key);
-    Node* lower_bound(Node* node, const T& key) const;
-    Node* remove_min(Node* node);
-    Node* remove(Node* node, const T& key);
-    Node* copy_nodes(Node* node);
-
-    Node* root = nullptr;
-    size_t _size = 0;
-    std::list<T> linkedList;
-    Less less = Less();
-
+template<class T>
+class Blaze::ISet {
  public:
-    Set() = default;
-    explicit Set(const Less& less);
-    Set(std::initializer_list<T> initializerList);
+    virtual size_t size() const = 0;
+    virtual bool empty() const = 0;
 
-    template<class InputIt>
-    Set(InputIt first, InputIt last);
+    virtual void erase(const T& val) = 0;
+    virtual void insert(const T& val) = 0;
+    virtual bool contains(const T& val) const = 0;
 
-    Set(const Set& rhs);
-    Set(Set&& rhs) noexcept;
+    virtual bool is_disjoint(const ISet &other) const noexcept = 0;
 
-    Set& operator=(const Set& rhs);
-    Set& operator=(Set&& rhs) noexcept;
-    ~Set();
+    virtual bool is_equal(const ISet &other) const noexcept = 0;
+    virtual bool operator==(const ISet &other) const noexcept = 0;
 
-    typename std::list<T>::const_iterator begin() const;
-    typename std::list<T>::const_iterator end() const;
+    virtual bool is_subset(const ISet &other) const noexcept = 0;
+    virtual bool operator<=(const ISet &other) const noexcept = 0;
 
-    void erase(const T& val);
-    void insert(const T& val);
+    virtual bool is_superset(const ISet &other) const noexcept = 0;
+    virtual bool operator>=(const ISet &other) const noexcept = 0;
 
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] bool empty() const;
+    virtual std::unique_ptr<ISet> Union(const ISet &other) const = 0;
+    virtual std::unique_ptr<ISet> operator|(const ISet &other) const = 0;
 
-    using iterator = typename std::list<T>::const_iterator;
+    virtual std::unique_ptr<ISet> intersection(const ISet &other) const = 0;
+    virtual std::unique_ptr<ISet> operator&(const ISet &other) const = 0;
 
-    iterator find(const T& val) const;
-    iterator lower_bound(const T& val) const;
+    virtual std::unique_ptr<ISet> difference(const ISet &other) const = 0;
+    virtual std::unique_ptr<ISet> operator-(const ISet &other) const = 0;
+
+    virtual ~ISet() = 0;
 };
 
-template<class T, class Less>
-Set<T, Less>::Set(const Less &_less) : less(_less) {}
+template<class T>
+Blaze::ISet<T>::ISet::~ISet() = default;
 
-template<class T, class Less>
-Set<T, Less>::Set(const Set &rhs) {
-    for (auto it = rhs.begin(); it != rhs.end(); ++it)
-        insert(*it);
-}
-
-template<class T, class Less>
-Set<T, Less>::Set(Set &&rhs) noexcept :
-    root(std::exchange(rhs.root, nullptr)),
-    _size(std::exchange(rhs._size, 0)),
-    linkedList(std::exchange(rhs.linkedList, std::list<T>())),
-    less(rhs.less) {}
-
-template<class T, class Less>
-Set<T, Less> &Set<T, Less>::operator=(const Set &rhs) {
-    if (this == std::addressof(rhs))
-        return *this;
-    _size = 0;
-    linkedList.clear();
-    delete root;
-    root = nullptr;
-    for (auto it = rhs.begin(); it != rhs.end(); ++it)
-        insert(*it);
-    return *this;
-}
-
-template<class T, class Less>
-Set<T, Less> &Set<T, Less>::operator=(Set &&rhs) noexcept {
-    std::swap(root, rhs.root);
-    std::swap(_size, rhs._size);
-    std::swap(linkedList, rhs.linkedList);
-    std::swap(less, rhs.less);
-}
-
-template<class T, class Less>
-int Set<T, Less>::balance_factor(Set::Node *node) {
-    return get_height(node->right) - get_height(node->left);
-}
-
-template<class T, class Less>
-int Set<T, Less>::get_height(Set::Node *node) {
-    if (!node)
-        return 0;
-    return node->height;
-}
-
-template<class T, class Less>
-void Set<T, Less>::fix_height(Set::Node *node) {
-    node->height = std::max(get_height(node->left), get_height(node->right)) + 1;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::rotate_right(Set::Node *node) {
-    Node* new_root = node->left;
-    node->left = new_root->right;
-    new_root->right = node;
-    fix_height(node);
-    fix_height(new_root);
-    return new_root;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::rotate_left(Set::Node *node) {
-    Node* new_root = node->right;
-    node->right = new_root->left;
-    new_root->left = node;
-    fix_height(node);
-    fix_height(new_root);
-    return new_root;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::balance(Set::Node *node) {
-    fix_height(node);
-    if (balance_factor(node) == 2) {
-        if (balance_factor(node->right) < 0)
-            node->right = rotate_right(node->right);
-        node = rotate_left(node);
-    }
-    else if (balance_factor(node) == -2) {
-        if (balance_factor(node->left) > 0)
-            node->left = rotate_left(node->left);
-        node = rotate_right(node);
-    }
-    return node;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::insert(Set::Node *node, const T& key, Node *parent) {
-    if (!node) {
-        ++_size;
-        auto new_node = new Node(key);
-        if (!parent) {
-            linkedList.push_back(key);
-            new_node->list_it = linkedList.begin();
-            return new_node;
-        }
-        if (less(key, parent->key)) {
-            linkedList.insert(parent->list_it, key);
-            auto it = parent->list_it;
-            new_node->list_it = --it;
-            return new_node;
-        }
-        auto it = parent->list_it;
-        linkedList.insert(++it, key);
-        new_node->list_it = --it;
-        return new_node;
-    }
-    if (!less(key, node->key) && !less(node->key, key))
-        return node;
-    if (less(key, node->key))
-        node->left = insert(node->left, key, node);
-    else
-        node->right = insert(node->right, key, node);
-    return balance(node);
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::find_min(Set::Node *node) {
-    Node *min = node;
-    while (min->left)
-        min = min->left;
-    return min;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::find(Set::Node *node, const T& key) const {
-    if (!node)
-        return nullptr;
-    if (!less(key, node->key) && !less(node->key, key))
-        return node;
-    if (less(key, node->key))
-        return find(node->left, key);
-    return find(node->right, key);
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::find_parent(Set::Node *node, const T& key) {
-    if (!node)
-        return nullptr;
-    else if (node->left && !less(key, node->left->key) && !less(node->left->key, key))
-        return node;
-    else if (node->right && !less(key, node->right->key) && !less(node->right->key, key))
-        return node;
-    else if (less(key, node->key))
-        return find_parent(node->left, key);
-    else if (less(node->key, key))
-        return find_parent(node->right, key);
-    return nullptr;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::lower_bound(Set::Node *node, const T& key) const {
-    if (!node)
-        return nullptr;
-    if (!less(key, node->key) && !less(node->key, key))
-        return node;
-    if (!less(key, node->key))
-        return lower_bound(node->right, key);
-
-    Node* candidate = lower_bound(node->left, key);
-    if (candidate && candidate->key < node->key)
-        return candidate;
-    return node;
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::remove(Set::Node *node, const T& key) {
-    if (!node)
-        return nullptr;
-    if (!less(key, node->key) && !less(node->key, key)) {
-        --_size;
-        Node* left = node->left;
-        Node* right = node->right;
-        linkedList.erase(node->list_it);
-        node->left = nullptr;
-        node->right = nullptr;
-        delete node;
-        if (!right)
-            return left;
-        Node* min = find_min(right);
-        min->right = remove_min(right);
-        min->left = left;
-        return balance(min);
-    }
-    if (less(key, node->key))
-        node->left = remove(node->left, key);
-    else
-        node->right = remove(node->right, key);
-    return balance(node);
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::remove_min(Set::Node *node) {
-    if (node->left==0)
-        return node->right;
-    node->left = remove_min(node->left);
-    return balance(node);
-}
-
-template<class T, class Less>
-typename Set<T, Less>::Node *Set<T, Less>::copy_nodes(Set::Node *node) {
-    if (!node)
-        return nullptr;
-    Node* new_root = new Node(node);
-    new_root->right = copy_nodes(node->right);
-    new_root->left = copy_nodes(node->left);
-    return new_root;
-}
-
-template<class T, class Less>
-Set<T, Less>::Set(std::initializer_list<T> initializerList) {
-    for (auto it = initializerList.begin(); it != initializerList.end(); ++it)
-        insert(*it);
-}
-
-template<class T, class Less>
-template<class InputIt>
-Set<T, Less>::Set(InputIt first, InputIt last) {
-    for (auto it = first; it != last; ++it)
-        insert(*it);
-}
-
-template<class T, class Less>
-typename std::list<T>::const_iterator Set<T, Less>::begin() const {
-    return linkedList.begin();
-}
-
-template<class T, class Less>
-typename std::list<T>::const_iterator Set<T, Less>::end() const {
-    return linkedList.end();
-}
-
-template<class T, class Less>
-void Set<T, Less>::erase(const T &val) {
-    root = remove(root, val);
-}
-
-template<class T, class Less>
-void Set<T, Less>::insert(const T &val) {
-    root = insert(root, val, nullptr);
-}
-
-template<class T, class Less>
-size_t Set<T, Less>::size() const {
-    return _size;
-}
-
-template<class T, class Less>
-bool Set<T, Less>::empty() const {
-    return _size == 0;
-}
-
-template<class T, class Less>
-Set<T, Less>::~Set() {
-    delete root;
-}
-
-template<class T, class Less>
-typename std::list<T>::const_iterator Set<T, Less>::find(const T &val) const {
-    Node* target = find(root, val);
-    if (target == nullptr)
-        return linkedList.end();
-    return target->list_it;
-}
-
-template<class T, class Less>
-typename std::list<T>::const_iterator Set<T, Less>::lower_bound(const T &val) const {
-    Node* lower = lower_bound(root, val);
-    if (!lower)
-        return linkedList.end();
-    return lower->list_it;
-}
+#endif //TASK_5_SET_HPP

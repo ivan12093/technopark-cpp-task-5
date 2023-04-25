@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "set.hpp"
+#include "avltree.hpp"
 
 int main(void) {
-    Set<int> set;
+    Blaze::AVLTree<int> set;
     set.insert(1);
     set.insert(4);
     set.insert(5);

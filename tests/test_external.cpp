@@ -1,4 +1,4 @@
-#include "set.hpp"
+#include "avltree.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <set>
@@ -17,7 +17,7 @@ namespace internal_tests {
  * in terms of constness */
     void check_constness() {
         std::cerr << "check constness... ";
-        const Set<int> s{-4, 5, 3, 0, 7};
+        const Blaze::AVLTree<int> s{-4, 5, 3, 0, 7};
         if (s.find(3) == s.end())
             fail("3 not found, incorrect find");
         if (*s.lower_bound(2) != 3 || s.lower_bound(8) != s.end() || *s.lower_bound(-2) != 0)
@@ -27,7 +27,7 @@ namespace internal_tests {
         if (s.size() != 5)
             fail("incorrect size");
         auto first = s.begin();
-        Set<int>::iterator last = s.end();
+        Blaze::AVLTree<int>::iterator last = s.end();
         if (*first != -4 || *(--last) != 7)
             fail("incorrect begin or end");
         std::cerr << "ok!\n";
@@ -38,9 +38,9 @@ namespace internal_tests {
     void check_copy_correctness() {
         std::cerr << "check copy... ";
         int elems[] = {3, 3, -1, 6, 0, 0, 17, -5, 4, 2};
-        Set<int> s1(elems, elems + 10);
+        Blaze::AVLTree<int> s1(elems, elems + 10);
         std::set<int> set_elems(elems, elems + 10);
-        Set<int> s2 = s1;
+        Blaze::AVLTree<int> s2 = s1;
         s2.insert(5);
         s2.insert(18);
         s2.insert(-2);
@@ -81,7 +81,7 @@ namespace internal_tests {
 /* check if class correctly handles empty set */
     void check_empty() {
         std::cerr << "check empty set handling... ";
-        Set<std::string> s;
+        Blaze::AVLTree<std::string> s;
         if (!s.empty())
             fail("wrong empty");
         auto begin = s.begin(), end = s.end();
@@ -91,12 +91,12 @@ namespace internal_tests {
         s.insert(elem);
         if (*s.lower_bound("aac") != elem)
             fail("wrong lower_bound");
-        Set<std::string> empty;
-        Set<std::string> s2{"opa"};
+        Blaze::AVLTree<std::string> empty;
+        Blaze::AVLTree<std::string> s2{"opa"};
         s2 = empty;
         if (s2.size())
             fail("incorrect size");
-        Set<std::string> s3(s2);
+        Blaze::AVLTree<std::string> s3(s2);
         if (!s3.empty())
             fail("incorrect empty");
         std::cerr << "ok!\n";
@@ -105,12 +105,12 @@ namespace internal_tests {
 /* check if class correctly works with iterators */
     void check_iterators() {
         std::cerr << "check iterators... ";
-        Set<std::pair<int, int> > s{{-3, 5}, {5, 5}, {-4, 1}, {-4, 4}, {0, 1}, {3, 0}};
+        Blaze::AVLTree<std::pair<int, int> > s{{-3, 5}, {5, 5}, {-4, 1}, {-4, 4}, {0, 1}, {3, 0}};
         if (s.begin()->second != 1 || (++s.begin())->first != -4)
             fail("wrong begin()");
-        Set<std::pair<int, int> >::iterator cur = s.end();
-        Set<int> small{1};
-        Set<int>::iterator it;
+        Blaze::AVLTree<std::pair<int, int> >::iterator cur = s.end();
+        Blaze::AVLTree<int> small{1};
+        Blaze::AVLTree<int>::iterator it;
         it = small.begin();
         if (*it != 1)
             fail("incorrect begin");
@@ -163,7 +163,7 @@ namespace internal_tests {
     void check_operator_less() {
         std::cerr << "check operator <... ";
 
-        Set<StrangeInt> s{-5, -3, -6, 13, 7, 1000, 963};
+        Blaze::AVLTree<StrangeInt> s{-5, -3, -6, 13, 7, 1000, 963};
         auto it = s.lower_bound(999);
         ++it;
         if (it != s.end())
@@ -176,17 +176,17 @@ namespace internal_tests {
         std::cerr << "check destructor... ";
         StrangeInt::init();
         {
-            Set<StrangeInt> s{5, 4, 3, 2, 1, 0};
+            Blaze::AVLTree<StrangeInt> s{5, 4, 3, 2, 1, 0};
             if (s.size() != 6)
                 fail("wrong size");
         }
         if (StrangeInt::counter)
             fail("wrong destructor (or constructors)");
         {
-            Set<StrangeInt> s{-3, 3, -2, 2, -1, 1};
-            Set<StrangeInt> s1(s);
+            Blaze::AVLTree<StrangeInt> s{-3, 3, -2, 2, -1, 1};
+            Blaze::AVLTree<StrangeInt> s1(s);
             s1.insert(0);
-            Set<StrangeInt> s2(s1);
+            Blaze::AVLTree<StrangeInt> s2(s1);
             if (s1.find(0) == s1.end())
                 fail("wrong find");
             s1 = s;
@@ -201,7 +201,7 @@ namespace internal_tests {
 /* check erase for correctness */
     void check_erase() {
         std::cerr << "check erase... ";
-        Set<std::string> s{"abacaba", "hello", "p"};
+        Blaze::AVLTree<std::string> s{"abacaba", "hello", "p"};
         s.erase("miss");
         s.erase("hello");
         if (s.size() != 2)
