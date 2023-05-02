@@ -126,7 +126,7 @@ Blaze::AVLTree<T, Less>::AVLTree() {
     try {
         connector_iter = std::make_shared<Node>(T());
     } catch (const std::bad_alloc&) {
-        throw Blaze::AllocateMemoryException(__FILE__, __LINE__, typeid(*this).name(), __FUNCTION__ );
+        throw Blaze::AllocateMemoryException(__FILE__, __LINE__, typeid(*this).name(), __FUNCTION__);
     }
 }
 
@@ -247,7 +247,13 @@ std::shared_ptr<typename Blaze::AVLTree<T, Less>::Node>
 Blaze::AVLTree<T, Less>::insert(const std::shared_ptr<Node>& node, const T& key, const std::shared_ptr<Node>& parent) {
     if (!node) {
         ++_size;
-        auto new_node = std::make_shared<Node>(key);
+        std::shared_ptr<Node> new_node;
+        try {
+            new_node = std::make_shared<Node>(key);
+        } catch (const std::bad_alloc&) {
+            throw Blaze::AllocateMemoryException(__FILE__, __LINE__, typeid(*this).name(), __FUNCTION__);
+        }
+
         if (!parent) {
             most_left = new_node;
             most_right = new_node;
