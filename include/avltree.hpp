@@ -11,6 +11,7 @@
 
 #include "blaze.hpp"
 #include "iterator.hpp"
+#include "exceptions.h"
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
@@ -28,7 +29,7 @@ class Blaze::AVLTree {
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    AVLTree() = default;
+    AVLTree();
     explicit AVLTree(const Less& _less);
     AVLTree(std::initializer_list<T> initializerList);
 
@@ -114,18 +115,30 @@ class Blaze::AVLTree {
     std::shared_ptr<Node> root;
     std::weak_ptr<Node> most_left;
     std::weak_ptr<Node> most_right;
-    std::shared_ptr<Node> connector_iter = std::make_shared<Node>(T());
+    std::shared_ptr<Node> connector_iter;
     size_t _size = 0;
     Less less = Less();
 };
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less>::AVLTree(const Less &_less) :  less(_less) {}
+Blaze::AVLTree<T, Less>::AVLTree() {
+    try {
+        connector_iter = std::make_shared<Node>(T());
+    } catch (const std::bad_alloc&) {
+        throw Blaze::AllocateMemoryException(__FILE__, __LINE__, typeid(*this).name(), __FUNCTION__ );
+    }
+}
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less>::AVLTree(const AVLTree &rhs) {
+Blaze::AVLTree<T, Less>::AVLTree(const Less &_less) : AVLTree() {
+    less = _less;
+}
+
+template<class T, class Less>
+requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
+Blaze::AVLTree<T, Less>::AVLTree(const AVLTree &rhs) : AVLTree(rhs.less) {
     for (auto it = rhs.begin(); it != rhs.end(); ++it)
         insert(*it);
 }
@@ -381,7 +394,7 @@ Blaze::AVLTree<T, Less>::copy_nodes(const std::shared_ptr<Node>& node) const {
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less>::AVLTree(std::initializer_list<T> initializerList) {
+Blaze::AVLTree<T, Less>::AVLTree(std::initializer_list<T> initializerList) : AVLTree() {
     for (auto it = initializerList.begin(); it != initializerList.end(); ++it)
         insert(*it);
 }
@@ -389,7 +402,7 @@ Blaze::AVLTree<T, Less>::AVLTree(std::initializer_list<T> initializerList) {
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
 template<class InputIt> requires std::input_iterator<InputIt>
-Blaze::AVLTree<T, Less>::AVLTree(InputIt first, InputIt last) {
+Blaze::AVLTree<T, Less>::AVLTree(InputIt first, InputIt last) : AVLTree() {
     for (auto it = first; it != last; ++it)
         insert(*it);
 }

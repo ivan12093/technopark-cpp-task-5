@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "blaze.hpp"
+#include "exceptions.h"
 
 template<class T>
 class Blaze::ConstIterator {
@@ -30,17 +31,23 @@ public:
 
     explicit operator bool() const noexcept { return !ptr.expired(); };
 
-    const T& operator*() const { check_invalid(); return ptr.lock()->key; };
-    const T* operator->() const { check_invalid(); return std::addressof(ptr.lock()->key); };
+    const T& operator*() const { check_invalid(__LINE__, __FUNCTION__ ); return ptr.lock()->key; };
+    const T* operator->() const { check_invalid(__LINE__, __FUNCTION__ ); return std::addressof(ptr.lock()->key); };
 
-    ConstIterator& operator++() { check_invalid(); ptr = ptr.lock()->next; return *this; };
-    ConstIterator operator++(int) { check_invalid(); auto copy = *this; ptr = ptr.lock()->next; return copy; };
+    ConstIterator& operator++() { check_invalid(__LINE__, __FUNCTION__ ); ptr = ptr.lock()->next; return *this; };
+    ConstIterator operator++(int) {
+        check_invalid(__LINE__, __FUNCTION__ ); auto copy = *this; ptr = ptr.lock()->next; return copy;
+    };
 
-    ConstIterator& operator--() { check_invalid(); ptr = ptr.lock()->prev; return *this; };
-    ConstIterator operator--(int) { check_invalid(); auto copy = *this; ptr = ptr.lock()->prev; return copy; };
+    ConstIterator& operator--() { check_invalid(__LINE__, __FUNCTION__ ); ptr = ptr.lock()->prev; return *this; };
+    ConstIterator operator--(int) {
+        check_invalid(__LINE__, __FUNCTION__ ); auto copy = *this; ptr = ptr.lock()->prev; return copy;
+    };
 
 private:
-    void check_invalid() const { if (ptr.expired()) throw std::runtime_error("FUCKED UP!"); };
+    void check_invalid(const size_t &line, const std::string &method_name) const {
+        if (ptr.expired()) throw Blaze::WildPointerException(__FILE__, line, typeid(*this).name(), method_name);
+    };
     std::weak_ptr<node> ptr;
 };
 

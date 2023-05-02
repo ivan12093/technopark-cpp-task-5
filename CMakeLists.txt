@@ -26,6 +26,8 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+add_library(${PROJECT_NAME}_lib ${SOURCES})
 
 if (BUILD_TESTS)
     include(GoogleTest)
