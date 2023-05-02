@@ -8,7 +8,7 @@ HunterGate(
 
 project(task_5)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_TESTS "Build tests" ON)
@@ -26,6 +26,8 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+add_library(${PROJECT_NAME}_lib ${SOURCES})
 
 if (BUILD_TESTS)
     include(GoogleTest)

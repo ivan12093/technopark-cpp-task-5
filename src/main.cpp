@@ -1,15 +1,18 @@
 #include <iostream>
 
-#include "set.hpp"
+#include "avltree.hpp"
 
-int main(void) {
-    Set<int> set;
+int main() {
+    Blaze::AVLTree<int> set;
     set.insert(1);
     set.insert(4);
     set.insert(5);
     set.insert(3);
     set.insert(2);
 
+    for (auto i : set) {
+        std::cout << i;
+    }
 
     set.erase(1);
     set.erase(4);
