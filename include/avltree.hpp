@@ -63,27 +63,59 @@ class Blaze::AVLTree {
     iterator find(const T& val) const;
     iterator lower_bound(const T& val) const;
 
-    bool contains(const T& val) const { return find(val) != end(); };
+    bool contains(const T& val) const { return find(val) != end(); }
 
-    bool is_disjoint(const AVLTree &other) const noexcept; // нет одинаковых элементов
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool is_disjoint(const C &other) const noexcept; // нет одинаковых элементов
 
-    bool is_equal(const AVLTree &other) const noexcept;
-    bool operator==(const AVLTree &other) const noexcept { return is_equal(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool is_equal(const C &other) const noexcept;
 
-    bool is_subset(const AVLTree &other) const noexcept;
-    bool operator<=(const AVLTree &other) const noexcept { return is_subset(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool operator==(const C &other) const noexcept { return is_equal(other); }
 
-    bool is_superset(const AVLTree &other) const noexcept { return other.is_subset(*this); };
-    bool operator>=(const AVLTree &other) const noexcept { return is_superset(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool is_subset(const C &other) const noexcept;
 
-    AVLTree Union(const AVLTree &other) const;
-    AVLTree operator|(const AVLTree &other) const { return Union(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool operator<=(const C &other) const noexcept { return is_subset(other); }
 
-    AVLTree intersection(const AVLTree &other) const;
-    AVLTree operator&(const AVLTree &other) const { return intersection(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool is_superset(const C &other) const noexcept { return other.is_subset(*this); }
 
-    AVLTree difference(const AVLTree &other) const;
-    AVLTree operator-(const AVLTree &other) const { return difference(other); };
+    template<Blaze::has_contains C>
+    requires std::convertible_to<typename C::value_type, T>
+    bool operator>=(const C &other) const noexcept { return is_superset(other); }
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree Union(const C &other) const;
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree operator|(const C &other) const { return Union(other); }
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree intersection(const C &other) const;
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree operator&(const C &other) const { return intersection(other); }
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree difference(const C &other) const;
+
+    template<Blaze::iterable C>
+    requires std::convertible_to<typename C::value_type, T>
+    AVLTree operator-(const C &other) const { return difference(other); }
 
  private:
     friend ConstIterator<T>;
@@ -509,9 +541,11 @@ Blaze::AVLTree<T, Less>::iterator Blaze::AVLTree<T, Less>::lower_bound(const T &
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-bool Blaze::AVLTree<T, Less>::is_disjoint(const AVLTree &other) const noexcept {
-    for (auto it = begin(); it != end(); ++it) {
-        if (other.contains(*it)) {
+template<Blaze::has_contains C>
+requires std::convertible_to<typename C::value_type, T>
+bool Blaze::AVLTree<T, Less>::is_disjoint(const C &other) const noexcept {
+    for (const T& elem : *this) {
+        if (other.contains(elem)) {
             return false;
         }
     }
@@ -520,7 +554,9 @@ bool Blaze::AVLTree<T, Less>::is_disjoint(const AVLTree &other) const noexcept {
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-bool Blaze::AVLTree<T, Less>::is_equal(const AVLTree &other) const noexcept {
+template<Blaze::has_contains C>
+requires std::convertible_to<typename C::value_type, T>
+bool Blaze::AVLTree<T, Less>::is_equal(const C &other) const noexcept {
     for (const T& elem : *this) {
         if (!other.contains(elem)) {
             return false;
@@ -536,7 +572,9 @@ bool Blaze::AVLTree<T, Less>::is_equal(const AVLTree &other) const noexcept {
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-bool Blaze::AVLTree<T, Less>::is_subset(const AVLTree &other) const noexcept {
+template<Blaze::has_contains C>
+requires std::convertible_to<typename C::value_type, T>
+bool Blaze::AVLTree<T, Less>::is_subset(const C &other) const noexcept {
     for (const T& elem : *this) {
         if (!other.contains(elem)) {
             return false;
@@ -547,7 +585,9 @@ bool Blaze::AVLTree<T, Less>::is_subset(const AVLTree &other) const noexcept {
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::Union(const AVLTree &other) const {
+template<Blaze::iterable C>
+requires std::convertible_to<typename C::value_type, T>
+Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::Union(const C &other) const {
     AVLTree<T, Less> result(*this);
     for (const T& elem : other) {
         result.insert(elem);
@@ -557,7 +597,9 @@ Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::Union(const AVLTree &other) con
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::intersection(const AVLTree &other) const {
+template<Blaze::iterable C>
+requires std::convertible_to<typename C::value_type, T>
+Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::intersection(const C &other) const {
     AVLTree result(less);
     for (const T& elem : *this) {
         if (other.contains(elem)) {
@@ -569,7 +611,9 @@ Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::intersection(const AVLTree &oth
 
 template<class T, class Less>
 requires std::copyable<T> && std::semiregular<Less> && Blaze::comparable_with<T, Less>
-Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::difference(const AVLTree &other) const {
+template<Blaze::iterable C>
+requires std::convertible_to<typename C::value_type, T>
+Blaze::AVLTree<T, Less> Blaze::AVLTree<T, Less>::difference(const C &other) const {
     AVLTree result(less);
     for (const T& elem : *this) {
         if (!other.contains(elem)) {
