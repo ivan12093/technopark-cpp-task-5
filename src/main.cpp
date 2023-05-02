@@ -2,7 +2,7 @@
 
 #include "avltree.hpp"
 
-int main(void) {
+int main() {
     Blaze::AVLTree<int> set;
     set.insert(1);
     set.insert(4);
@@ -10,6 +10,9 @@ int main(void) {
     set.insert(3);
     set.insert(2);
 
+    for (auto i : set) {
+        std::cout << i;
+    }
 
     set.erase(1);
     set.erase(4);
